@@ -1,0 +1,109 @@
+require 'byebug'
+
+#better solution: split into %0, %1, %2 classes, assume most common = space. get key[0] key[1] key[2] this way
+
+def binarySearch(word, dictionary)
+  if dictionary.size == 1
+    return word == dictionary[0]
+  end
+  index = dictionary.size / 2
+  return false if word.size == 1
+  if word == dictionary[index]
+    return true
+  end
+  if index >= dictionary.size or index < 0
+    return false
+  end
+  if word > dictionary[index]
+    return binarySearch(word, dictionary[index + 1..dictionary.size - 1])
+  end
+  return binarySearch(word, dictionary[0..index - 1])
+end
+
+
+
+def parse_for_words(decrypted_string)
+  fileObj = File.new('words.txt', 'r')
+  line = fileObj.gets
+  dictionary = line.split(',')
+  dictionary.each do |word|
+    word.gsub!('"', '')
+  end
+
+  count = 0
+  index1 = 0
+  while index1 <= decrypted_string.size
+    (index1..decrypted_string.size - 1).each do |index2|
+      #byebug if index1 == 2 and index2 == 4
+      if binarySearch(decrypted_string[index1..index2].upcase, dictionary)
+        count += 1
+        index1 = index2 + 1
+        break
+      end
+    end
+    index1 += 1
+  end
+  return count
+end
+
+fileObj = File.new('p059_cipher.txt', 'r')
+line = fileObj.gets
+
+array = line.split(",")
+
+newFile = File.open('empty.txt', 'w')
+
+
+line2 = ''
+(0..array.size-1).each do |index|
+  p1 = 'g'.ord
+  p2 = 'o'.ord
+  p3 = 'd'.ord
+  line2[index] = (array[index].to_i ^ p1).chr if index % 3 == 0
+  line2[index] = (array[index].to_i ^ p2).chr if index % 3 == 1
+  line2[index] = (array[index].to_i ^ p3).chr if index % 3 == 2
+  newFile.puts line2
+end
+
+total = 0
+(0..line2.size-1).each do |index|
+  total += line2[index].ord
+end
+puts "total is #{total}"
+
+
+max_word_count = 0
+code = [0,0,0]
+(97..122).each do |p1|
+  puts p1
+  (97..122).each do |p2|
+    (97..122).each do |p3|
+
+      line2 = ''
+      (0..50).each do |index|
+        line2[index] = (array[index].to_i ^ p1).chr if index % 3 == 0
+        line2[index] = (array[index].to_i ^ p2).chr if index % 3 == 1
+        line2[index] = (array[index].to_i ^ p3).chr if index % 3 == 2
+      end
+      byebug if p1 == 'g'.ord and p2 == 'o'.ord and p3 == 'd'.ord
+      line_word_count = parse_for_words(line2)
+      if line_word_count > max_word_count
+        max_word_count = line_word_count
+        code = [p1, p2, p3]
+      end
+
+      #print line2[0..15], " #{p3}, #{p2}, #{p1} \n"
+      #newFile.puts line2
+    end
+  end
+end
+
+# array.each do |line|
+#   parse_for_words(line)
+# end
+
+puts max_word_count, code
+
+
+
+
